@@ -1,5 +1,7 @@
 // types.ts
 export type Store = {
+    photo(photo: any): unknown;
+    category(category: any): unknown;
     id: number;
     name: string;
     localImage?: any; // Adjust type if needed

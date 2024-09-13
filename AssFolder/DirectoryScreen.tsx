@@ -16,7 +16,7 @@ import { FloatingAction } from 'react-native-floating-action';
 import CreateScreen from './CreateScreen';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from './App'; 
-
+import SQLite from 'react-native-sqlite-storage';
 const { height } = Dimensions.get('window');
 type DirectoryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DirectoryScreen'>;
 const actionsForAdmin = [
@@ -27,14 +27,27 @@ const actionsForAdmin = [
     position: 1,
   },
 ];
+const openCallback = () => {
+  console.log('Database opened successfully');
+};
 
-const DirectoryScreen = () => {
+const errorCallback = (err: any) => {
+  console.log('Error in opening the database: ' + err);
+};
+
+const DirectoryScreen =  ({ route }: any)=> {
   const [activeTab, setActiveTab] = useState("Bakery"); // Track the active tab
   const scrollViewRef = useRef<ScrollView>(null);
   const sectionPositions = useRef<{ [key: string]: number }>({}); // Store positions of sections
   const navigation = useNavigation<DirectoryScreenNavigationProp>(); // Use typed navigation
   const { userRole } = useUserRole();
-
+  const [directory] = useState(
+    SQLite.openDatabase(
+      { name: 'directory.sqlite', createFromLocation: '~directory.sqlite' },
+      openCallback,
+      errorCallback,
+    )
+  );
   const handleScrollTo = (section: string) => {
     setActiveTab(section); // Set active tab when a button is pressed
     if (sectionPositions.current[section]) {

@@ -7,7 +7,7 @@ import AdminLoginScreen from './AssFolder/AdminLoginScreen';
 import DirectoryStack from './AssFolder/DirectoryStack'; // Import the DirectoryStack
 import { UserRoleProvider } from './AssFolder/UserRoleContext';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import { StoreProvider } from './AssFolder/StoreContext';
 const Tab = createBottomTabNavigator();
 
 const CustomBottom = ({ children, onPress }: any) => {
@@ -36,6 +36,7 @@ const App = () => {
   const winHeight = Dimensions.get('window').height;
 
   return (
+    <StoreProvider>
     <UserRoleProvider>
       <NavigationContainer>
         <Tab.Navigator
@@ -96,6 +97,7 @@ const App = () => {
         </Tab.Navigator>
       </NavigationContainer>
     </UserRoleProvider>
+    </StoreProvider>
   );
 };
 
