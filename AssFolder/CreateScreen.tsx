@@ -11,6 +11,7 @@ const CreateScreen = ({ navigation }: any) => {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
 
+  
   // Initialize socket connection
   const socket = io('http://10.0.2.2:3000');
 

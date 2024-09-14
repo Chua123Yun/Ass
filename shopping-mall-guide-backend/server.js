@@ -76,7 +76,7 @@ const ${storeData.id} = () => {
   const handleDelete = async () => {
     try {
       console.log('Sending delete request...');
-      const response = await fetch(\`http://<Your-IP-Address>:3000/delete-store/\${storeData.id}\`, {
+      const response = await fetch(\`http://10.0.2.2:3000/delete-store/\${storeData.id}\`, {
         method: 'DELETE',
       });
       console.log('Response status:', response.status);
@@ -178,7 +178,7 @@ export default ${storeData.id};
     res.json({ message: 'Store created successfully' });
   } catch (err) {
     console.error('Failed to create store:', err);
-    res.status(500).json({ error: 'Failed to create store' });
+    res.status(500).json({ error: 'Failed to create store', details: err.message });
   }
 });
 
@@ -215,22 +215,19 @@ app.delete('/delete-store/:id', (req, res) => {
     res.json({ message: 'Store deleted successfully' });
   } catch (err) {
     console.error('Failed to delete store:', err);
-    res.status(500).json({ error: 'Failed to delete store' });
+    res.status(500).json({ error: 'Failed to delete store', details: err.message });
   }
 });
 
 // Socket.IO setup
 io.on('connection', (socket) => {
   console.log('New client connected');
-  socket.on('store_created', (storeData) => {
-    console.log('Store created:', storeData);
-  });
   socket.on('disconnect', () => {
     console.log('Client disconnected');
   });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// Start server
+server.listen(3000, () => {
+  console.log('Server is running on http://localhost:3000');
 });
