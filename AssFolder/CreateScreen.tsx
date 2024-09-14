@@ -3,73 +3,53 @@ import { View, Text, TextInput, StyleSheet, Button, Alert, ScrollView } from 're
 import { Picker } from '@react-native-picker/picker';
 import io from 'socket.io-client';
 
-const CreateScreen = ({ navigation }: { navigation: any }) => {
-  const [storeName, setStoreName] = useState<string>('');
-  const [category, setCategory] = useState<string>('');
-  const [floor, setFloor] = useState<string>('');
-  const [phone, setPhone] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [socket, setSocket] = useState<any>(null);
+const CreateScreen = ({ navigation }: any) => {
+  const [storeName, setStoreName] = useState('');
+  const [category, setCategory] = useState('DIY');
+  const [floor, setFloor] = useState('Ground');
+  const [phone, setPhone] = useState('');
+  const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // List of categories
-  const categories = [
-    'Bakery',
-    'Beauty and Service',
-    'Books, Gifts, and Toys',
-    'Department Store',
-    'Digital and Home Appliances',
-    'Enrichments and Hobbies',
-    'Fashion',
-    'Food and Beverages',
-    'Food Court',
-    'Entertainment',
-    'Health and Wellness',
-    'Lifestyle and Home Living',
-    'Convenience and Services',
-    'Snacks and Dessert',
-    'Sports and Shoes',
-  ];
+  // Initialize socket connection
+  const socket = io('http://10.0.2.2:3000');
 
   useEffect(() => {
-    const newSocket = io('http://10.0.2.2:3000', { transports: ['websocket'] });
-    setSocket(newSocket);
-
-    newSocket.on('connect_error', (error) => {
-      Alert.alert('WebSocket Error', `Connection failed: ${error.message}`);
-    });
-
-    // Cleanup on unmount
     return () => {
-      newSocket.close();
+      socket.disconnect(); // Cleanup socket on unmount
     };
   }, []);
 
-  // Function to create store dynamically
-  const createStore = async (): Promise<void> => {
-    if (!storeName || !category || !floor || !phone || !description) {
-      Alert.alert('Error', 'Please fill in all fields.');
-      return;
+  const validateInputs = () => {
+    if (!storeName || !phone || !description) {
+      Alert.alert('Validation Error', 'Please fill in all required fields.');
+      return false;
     }
+    return true;
+  };
+
+  const createStore = async () => {
+    if (!validateInputs()) return;
 
     const storeData = {
       category,
       floor,
       phone,
       description,
-      mapLocation: 'MapComponent', // Assuming 'MapComponent' is a placeholder
+      mapLocation: 'MapComponent', // Placeholder for map location
       id: storeName.replace(/\s+/g, '_'),
-      storeName
+      storeName,
     };
 
-    try {
-      console.log('Sending request to server with body:', storeData);
+    setLoading(true);
 
+    try {
       const response = await fetch('http://10.0.2.2:3000/create-store', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ storeName, storeData }), // Sending data as expected by server
+        body: JSON.stringify({ storeName, storeData }),
       });
 
       const result = await response.json();
@@ -77,16 +57,16 @@ const CreateScreen = ({ navigation }: { navigation: any }) => {
         Alert.alert('Success', result.message);
 
         if (socket) {
-          socket.emit('store_created', storeData); // Emit event for store creation
+          socket.emit('store_created', storeData);
         }
-
         navigation.goBack();
       } else {
         Alert.alert('Error', result.message || 'An error occurred');
       }
     } catch (err) {
-      console.error('Failed to create store:', err);
       Alert.alert('Error', `Failed to create store: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,21 +83,32 @@ const CreateScreen = ({ navigation }: { navigation: any }) => {
       <Text style={styles.label}>Category:</Text>
       <Picker
         selectedValue={category}
+        style={styles.picker}
         onValueChange={(itemValue) => setCategory(itemValue)}
       >
-        <Picker.Item label="Select a category" value="" />
-        {categories.map((cat) => (
-          <Picker.Item key={cat} label={cat} value={cat} />
-        ))}
+        <Picker.Item label="DIY" value="DIY" />
+        <Picker.Item label="Beauty" value="Beauty" />
+        <Picker.Item label="Food" value="Food" />
+        <Picker.Item label="Food Court" value="Food Court" />
+        <Picker.Item label="Entertainment" value="Entertainment" />
+        <Picker.Item label="Health and Wellness" value="Health and Wellness" />
+        <Picker.Item label="Lifestyle and Home Living" value="Lifestyle and Home Living" />
+        <Picker.Item label="Convenience and Services" value="Convenience and Services" />
+        <Picker.Item label="Snacks and Dessert" value="Snacks and Dessert" />
+        <Picker.Item label="Sports and Shoes" value="Sports and Shoes" />
       </Picker>
 
       <Text style={styles.label}>Floor:</Text>
-      <TextInput
-        style={styles.input}
-        value={floor}
-        onChangeText={setFloor}
-        placeholder="Enter floor"
-      />
+      <Picker
+        selectedValue={floor}
+        style={styles.picker}
+        onValueChange={(itemValue) => setFloor(itemValue)}
+      >
+        <Picker.Item label="Ground" value="Ground" />
+        <Picker.Item label="First" value="First" />
+        <Picker.Item label="Second" value="Second" />
+        {/* Add more floor options if necessary */}
+      </Picker>
 
       <Text style={styles.label}>Phone:</Text>
       <TextInput
@@ -125,25 +116,30 @@ const CreateScreen = ({ navigation }: { navigation: any }) => {
         value={phone}
         onChangeText={setPhone}
         placeholder="Enter phone number"
+        keyboardType="phone-pad"
       />
 
       <Text style={styles.label}>Description:</Text>
       <TextInput
-        style={styles.input}
+        style={styles.textArea}
         value={description}
         onChangeText={setDescription}
         placeholder="Enter description"
+        multiline
+        numberOfLines={4}
       />
 
-      <Button title="Create Store" onPress={createStore} />
+      <Button title={loading ? 'Creating...' : 'Create Store'} onPress={createStore} disabled={loading} />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  label: { fontSize: 18, marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 8, marginBottom: 16 },
+  label: { fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
+  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 4, padding: 8, marginBottom: 16 },
+  picker: { height: 50, width: '100%', marginBottom: 16 },
+  textArea: { borderWidth: 1, borderColor: '#ccc', borderRadius: 4, padding: 8, marginBottom: 16 },
 });
 
 export default CreateScreen;
