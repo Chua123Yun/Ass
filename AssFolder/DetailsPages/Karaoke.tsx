@@ -5,7 +5,7 @@ import { stores } from '../CommonData'; // Import the stores object
 import L282 from '../MapPages/L282';
 const Karaoke = () => {
   const navigation = useNavigation();
-  const storeData = stores.entertainment.find(store => store.id === 21);
+  const storeData = stores.entertainment.find(store => store.id === 2);
 
   return (
     <View style={styles.container}>

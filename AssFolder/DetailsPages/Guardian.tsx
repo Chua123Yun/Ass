@@ -5,7 +5,7 @@ import { stores } from '../CommonData'; // Import the stores object
 import G34 from '../MapPages/G34';
 const Guardian = () => {
   const navigation = useNavigation();
-  const storeData = stores.enrichment.find(store => store.id === 2);
+  const storeData = stores.health.find(store => store.id === 2);
 
   return (
     <View style={styles.container}>

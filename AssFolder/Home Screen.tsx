@@ -15,12 +15,12 @@ const HomeScreen = ({ navigation }: any) => {
         <View style={styles.rowContainer}>
           <View >
           <TouchableOpacity style={styles.buttonContainer} onPress={() => navigation.navigate('EventDetails')}>
-            <Image style={styles.buttonImage} source={require('./EventNPromoImages/EventImg.png')} />
+            <Image style={styles.buttonImage} source={require('./EventPromoImages/upcomingevent.jpg')} />
             <Text style={styles.buttonText}>EventDetails</Text>
           </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.buttonContainer} onPress={() => navigation.navigate('PromotionDetails')}>
-            <Image style={styles.buttonImage} source={require('./EventNPromoImages/EventImg.png')} />
+            <Image style={styles.buttonImage} source={require('./EventPromoImages/promotion.png')} />
             <Text style={styles.buttonText}>Promotions</Text>
           </TouchableOpacity>
         </View>

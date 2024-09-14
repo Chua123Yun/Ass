@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Button, Alert, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import io from 'socket.io-client';
 
-const CreateScreen = () => {
+const CreateScreen = ({ navigation }: { navigation: any }) => {
   const [storeName, setStoreName] = useState<string>('');
   const [category, setCategory] = useState<string>('');
   const [floor, setFloor] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [socket, setSocket] = useState<any>(null);
 
   // List of categories
   const categories = [
@@ -28,6 +30,20 @@ const CreateScreen = () => {
     'Sports and Shoes',
   ];
 
+  useEffect(() => {
+    const newSocket = io('http://10.0.2.2:3000', { transports: ['websocket'] });
+    setSocket(newSocket);
+
+    newSocket.on('connect_error', (error) => {
+      Alert.alert('WebSocket Error', `Connection failed: ${error.message}`);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      newSocket.close();
+    };
+  }, []);
+
   // Function to create store dynamically
   const createStore = async (): Promise<void> => {
     if (!storeName || !category || !floor || !phone || !description) {
@@ -40,32 +56,31 @@ const CreateScreen = () => {
       floor,
       phone,
       description,
-      mapLocation: 'MapComponent', // Adjust this as needed
-      id: storeName.replace(/\s+/g, '_'), // Ensure the ID is unique
+      mapLocation: 'MapComponent', // Assuming 'MapComponent' is a placeholder
+      id: storeName.replace(/\s+/g, '_'),
+      storeName
     };
 
     try {
-      console.log('Sending request to server with body:', {
-        storeName,
-        storeData,
-      });
+      console.log('Sending request to server with body:', storeData);
 
       const response = await fetch('http://10.0.2.2:3000/create-store', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          storeName,
-          storeData,
-        }),
+        body: JSON.stringify({ storeName, storeData }), // Sending data as expected by server
       });
 
       const result = await response.json();
-      console.log('Server response:', result);
-
       if (response.ok) {
         Alert.alert('Success', result.message);
+
+        if (socket) {
+          socket.emit('store_created', storeData); // Emit event for store creation
+        }
+
+        navigation.goBack();
       } else {
         Alert.alert('Error', result.message || 'An error occurred');
       }
@@ -77,7 +92,6 @@ const CreateScreen = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Form Inputs and Button for creating store */}
       <Text style={styles.label}>Store Name:</Text>
       <TextInput
         style={styles.input}
